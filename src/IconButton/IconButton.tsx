@@ -99,20 +99,6 @@ const StyledSubContainer = styled(Box)((theme) => {
   };
 });
 
-const StyledIconButtonContainer = styled(Box)((theme) => {
-  return {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    display: 'inline-flex',
-    alignItems: 'center',
-    '&:focus, &.force-to-focus, &.force-to-focusHover': {
-      outline: `1px solid ${theme.theme.palette.action.focus}`,
-      borderRadius: '3px',
-      outlineOffset: '-2px',
-    },
-  };
-});
-
 export const getMuiIconButtonThemeOverrides = (): Components<Omit<Theme, 'components'>> => {
   return {
     MuiIconButton: {
@@ -125,13 +111,13 @@ export const getMuiIconButtonThemeOverrides = (): Components<Omit<Theme, 'compon
             padding: 0,
             '&:hover': {
               borderRadius: '2px',
-              backgroundColor: 'transparent',
+              backgroundColor: theme.palette.action.hover,
             },
             '&.force-to-focusHover': {
               borderRadius: '2px',
-              backgroundColor: 'transparent',
+              backgroundColor: theme.palette.action.hover,
             },
-            '.MuiSvgIcon-root': {
+            '.MuiSvgIcon-root:not(.endIcon)': {
               margin: '0',
               padding: 0,
               outline: 'none',
@@ -175,40 +161,41 @@ export type IconButtonProps = MuiIconButtonProps & {
 }
 
 const IconButton = React.forwardRef(({ ...props }: IconButtonProps, forwardRef) => {
-  const iconBoxRef = React.useRef<HTMLElement>(null);
-
-  const handleOnFocus = () => {
-    iconBoxRef.current?.focus();
-  };
-
   return (
     <StyledMainContainer
       className={`${props.selected ? 'selected' : ''} ${props.disabled ? 'disabled' : ''} ${props.className}`}
     >
       <StyledSubContainer
         className={`${props.selected ? 'selected' : ''} ${props.disabled ? 'disabled' : ''} ${props.className}`}
-        onClick={handleOnFocus}
-        onMouseDown={handleOnFocus}
       >
-        <StyledIconButtonContainer
-          ref={iconBoxRef}
-          tabIndex={0}
-          className={props.className}
+        <MuiIconButton
+          {...props}
+          ref={forwardRef as ((instance: HTMLButtonElement | null) => void)}
+          role="button"
+          aria-disabled={props.disabled}
+          className={`${props.selected ? 'selected' : ''} ${props.className}`}
+          sx={(theme) => {
+            return {
+              '&.Mui-focusVisible, &:focus, &.force-to-focus, &.force-to-focusHover': {
+                outline: `1px solid ${theme.palette.action.focus}`,
+                borderRadius: '3px',
+                outlineOffset: '-2px',
+              },
+            };
+          }}
         >
-          <MuiIconButton
-            {...props}
-            ref={forwardRef as ((instance: HTMLButtonElement | null) => void)}
-            role="button"
-            aria-disabled={props.disabled}
-          />
+          {props.children}
           { props.showendicon && (
             <IconChevronDown
+              className="endIcon"
               data-testid={IconButtonTestIds.ICONBUTTON_END_ICON}
               sx={(theme) => {
                 return {
                   color: theme.palette.action.active,
                   width: '12px',
                   height: '12px',
+                  margin: '0',
+                  padding: '0',
                   ...props.variant === IconButtonVariants.WITH_PADDING && {
                     marginLeft: '-2px',
                     ...props.size === IconButtonSizes.SMALL && {
@@ -230,8 +217,9 @@ const IconButton = React.forwardRef(({ ...props }: IconButtonProps, forwardRef) 
               }}
             />
           )}
-        </StyledIconButtonContainer>
+        </MuiIconButton>
       </StyledSubContainer>
+      {props.label && (
       <Typography
         variant="caption"
         textAlign="center"
@@ -246,6 +234,7 @@ const IconButton = React.forwardRef(({ ...props }: IconButtonProps, forwardRef) 
       >
         {props.label}
       </Typography>
+      )}
     </StyledMainContainer>
   );
 }) as React.FC<IconButtonProps>;
